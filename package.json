@@ -1,0 +1,19 @@
+{
+  "name": "fcdata-client-ex",
+  "version": "2.3.0",
+  "description": "Example using fctrading-client-js",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node main.js"
+  },
+  "author": "ducdv@ssi.com.vn",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "0.27.2",
+    "express": "^4.17.0",
+    "ioredis": "^5.4.1",
+    "ssi-fcdata": "^2.2.0",
+    "ws": "^8.18.0"
+  }
+}
