@@ -33,7 +33,7 @@ const write = async (key, value) => {
 const writeHash = async (key, hashValue) => {
   try {
     await redis.hset(key, hashValue);
-    console.log(`Hash ${key} set successfully.`);
+    //console.log(`Hash ${key} set successfully.`);
 
     return true;
   } catch (error) {

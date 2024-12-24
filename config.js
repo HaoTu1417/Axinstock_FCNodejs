@@ -1,9 +1,9 @@
 module.exports = {
   market: {
-    HubUrl: "wss://fc-datahub.ssi.com.vn/",
-    ApiUrl: "https://fc-data.ssi.com.vn/",
-    ConsumerId: "dc24486aa9d94dbda3bbf6229905b3d0",
-    ConsumerSecret: "4ca2b53b0d0e483cbcfeca4abadd8251",
+    HubUrl: process.env.MARKET_HUBURL || "wss://fc-datahub.ssi.com.vn/",
+    ApiUrl: process.env.MARKET_APIURL || "https://fc-data.ssi.com.vn/",
+    ConsumerId: process.env.MARKET_CONSUMERID ||  "dc24486aa9d94dbda3bbf6229905b3d0",
+    ConsumerSecret: process.env.MARKET_CONSUMERSECRET || "4ca2b53b0d0e483cbcfeca4abadd8251",
   },
   redis: {
     host: "103.37.61.162",

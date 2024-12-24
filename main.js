@@ -8,7 +8,9 @@ const axios = require("axios");
 const { WebSocketServer } = require("ws");
 const app = express();
 const port = 3020;
+
 /** @END_CONFIG */
+
 
 // const baseStockObject = {
 //   id: 2100,
@@ -342,7 +344,7 @@ rq({
         token: token,
       });
       client.bind(client.events.onData, function (message) {
-        // console.log(message);
+        //console.log(message);
         saveToRedis(message);
       });
       client.bind(client.events.onConnected, function () {
@@ -452,8 +454,9 @@ const saveToRedis = async (input) => {
 
   redis.writeHash(content.Symbol, newStockObject);
   // console.log("newStockObject", newStockObject);
-  broadcast(newStockObject);
-  messages.push(newStockObject);
+ // broadcast(newStockObject);
+  
+  // messages.push(newStockObject);
 };
 
 const server = app.listen(port, "localhost", () =>
