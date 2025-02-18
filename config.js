@@ -6,9 +6,12 @@ module.exports = {
     ConsumerSecret: process.env.MARKET_CONSUMERSECRET || "4ca2b53b0d0e483cbcfeca4abadd8251",
   },
   redis: {
-    host: "103.37.61.162",
-    post: 6379,
-    password: "",
-    db: 5,
+    host: process.env.REDISHOST || "103.37.61.162",
+    post: process.env.REDISPORT || 6379,
+    password: process.env.REDISPASSWORD  || "",
+    db: process.env.REDISPORT || 5,
   },
+  enviroment:{
+    process: "dotnet",
+  }
 };
