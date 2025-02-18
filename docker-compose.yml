@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: ssifcnode
+    ports:
+      - "3000:3000" # Map container's port 3000 to host port 3000
+    environment:
+      MARKET_CONSUMERID: "dc24486aa9d94dbda3bbf6229905b3d0"
+      MARKET_CONSUMERSECRET: "4ca2b53b0d0e483cbcfeca4abadd8251"
+    
+    restart: unless-stopped

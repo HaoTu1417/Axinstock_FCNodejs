@@ -48,6 +48,7 @@ exports.events = events;
  */
 exports.initStream = function (options) {
     var url = resoleURL(options.url, api.SIGNALR);
+    console.log('init stream');
     client = new signalr.client(
         url,
         ["FcMarketDataV2Hub"],

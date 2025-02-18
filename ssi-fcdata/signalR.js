@@ -453,12 +453,15 @@ function clientInterface(baseUrl, hubs, reconnectTimeout, doNotStart) {
 
         var payload = buildPayload(_hub.data.name, methodName, args, ++_client.websocket.messageid);
         //try to send message to signalR host
+        console.log(' //try to send message to signalR host');
         sendPayload(payload);
         return payload;
     };
 
     function sendPayload(payload) {
+        console.log('sendPayload');
         if (_client.websocket.connection) {
+          
             _client.websocket.connection.send(payload);
         } else {
             setImmediate(sendPayload, payload);
