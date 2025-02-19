@@ -1,13 +1,16 @@
 const Redis = require("ioredis");
 const config = require("./config.js");
 
+const redisConfig = {
+  host: process.env.REDISHOST||'localhost',
+  port: Number(process.env.REDISPORT|| 6379), // ✅ Convert to number
+  password: process.env.REDISPASSWORD || "",
+  db: Number(process.env.DB) || 0, // ✅ Ensure DB is a number
+};
+
 // Connect to Redis
-const redis = new Redis({
-  host: config.redis.host, // Redis server address
-  port: config.redis.post, // Redis port (default: 6379)
-  password: config.redis.password, // Set if authentication is required
-  db:config.redis.db
-});
+const redis = new Redis(redisConfig);
+console.log("config", redisConfig);
 
 // Connection event handling
 redis.on("connect", () => {

@@ -9,9 +9,10 @@ module.exports = {
     host: process.env.REDISHOST || "103.37.61.162",
     post: process.env.REDISPORT || 6379,
     password: process.env.REDISPASSWORD  || "",
-    db: process.env.REDISPORT || 5,
+    db: process.env.DB || 5,
   },
   enviroment:{
     process: "dotnet",
+    port: 3020
   }
 };

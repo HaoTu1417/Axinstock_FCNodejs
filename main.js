@@ -8,14 +8,14 @@ const client = require("ssi-fcdata");
 const axios = require("axios");
 const { WebSocketServer } = require("ws");
 const app = express();
-const port = 3021;
+const port = config.enviroment.port || 3020;
 const fs = require('fs');
 const path = require('path');
 const filePath = path.join(__dirname, 'stockObject.json'); // File to save stockObject
 // Enable CORS for all routes
 app.use(cors());
 
-console.log(config.enviroment.process);
+// console.log(config.enviroment.port);
 /** @END_CONFIG */
 
 const baseStockObjectPHP = {
@@ -757,7 +757,7 @@ const saveToRedisPhp = async (input) => {
   //  messages.push(newStockObject);
 };
 
-const server = app.listen(port, "localhost", () =>
+const server = app.listen(port, "0.0.0.0", () =>
   console.log(`Example app listening on port ${port}!`)
 );
 
