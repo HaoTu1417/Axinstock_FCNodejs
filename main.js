@@ -59,24 +59,29 @@ const baseStockObjectPHP = {
 };
 
 const baseStockObject = {
-  stock_name: "",
+  name: "",
   exchange: "HOSE",
-  update_time: "2024-12-13T09:15:01",
-  is_enabled: 1,
-  prev_day_c: 0,
-  prev_day_v: 0,
-  day_o: 0,
-  day_h: 0,
-  day_l: 0,
-  day_c: 0,
-  day_v: 0,
+  updateTime: "2024-12-13T09:15:01",
+  isEnabled: 1,
+  high: 0,
+  low: 0,
   price: 0,
-  bids: [],
-  asks: [],
-  bid_sizes: [],
-  ask_sizes: [],
   ceiling: 0,
   floor: 0,
+  reference:0,
+  orderBook: {
+    asks: [],
+    askSizes: [],
+    bids: [],
+    bidSizes: [],
+  },
+  match:{
+     price: 0,
+    volume: 0,
+    change: 0,
+    percentChange: "0%",
+    percent: 0
+  }
 };
 
 app.get("/Securities", (req, res) => {
@@ -389,17 +394,24 @@ const stockObject = {};
 function transformData(data) {
   //console.log('data',data);
   const result = {
-    symbol: data.Symbol,
+    name: data.Symbol,
     open: data.Open,
+    ceiling: data.Ceiling,
+    floor:data.Floor,
+    reference: data.RefPrice,
     close: data.Close,
     last: data.LastPrice,
     match: {
       price: data.LastPrice,
       volume: data.LastVol,
       change: data.Change,
-      percentChange: data.RatioChange
+      percentChange: data.RatioChange,
     },
     orderBook: {
+      asks: [data.AskPrice1, data.AskPrice2, data.AskPrice3],
+      askSizes: [data.AskVol1, data.AskVol2, data.AskVol3],
+      bids: [data.BidPrice1, data.BidPrice2, data.BidPrice3],
+      bidSizes: [data.BidVol1, data.BidVol2, data.BidVol3],
       bidPrice1: data.BidPrice1,
       bidVolume1: data.BidVol1,
       bidPrice2: data.BidPrice2,
@@ -411,7 +423,7 @@ function transformData(data) {
       askPrice2: data.AskPrice2,
       askVolume2: data.AskVol2,
       askPrice3: data.AskPrice3,
-      askVolume3: data.AskVol3
+      askVolume3: data.AskVol3,
     },
     totalVolume: data.TotalVol,
     low: data.Low,
@@ -419,8 +431,8 @@ function transformData(data) {
     foreign: {
       buyVolume: 0, // No data provided for foreign buy volume
       sellVolume: 0, // No data provided for foreign sell volume
-      totalValue: 0 // No data provided for foreign total value
-    }
+      totalValue: 0, // No data provided for foreign total value
+    },
   };
   return result;
 }
@@ -428,100 +440,6 @@ function transformData(data) {
 
 app.get("/stocks", (req, res) => {
 
-  // const stocks = [
-  //   {
-  //     symbol: 'ACB',
-  //     open: 27.0,
-  //     close: 25.5,
-  //     last: 26.75,
-  //     match: {
-  //       price: 25,
-  //       volume: 231300,
-  //       change: 0.0,
-  //       percentChange: 0.0
-  //     },
-  //     orderBook: {
-  //       bidPrice1: 24.85,
-  //       bidVolume1: 233300,
-  //       bidPrice2: 24.9,
-  //       bidVolume2: 478000,
-  //       bidPrice3: 24.95,
-  //       bidVolume3: 220800,
-  //       askPrice1: 25.0,
-  //       askVolume1: 338100,
-  //       askPrice2: 25.05,
-  //       askVolume2: 219100,
-  //       askPrice3: 25.1,
-  //       askVolume3: 158200
-  //     },
-  //     totalVolume: 408100,
-  //     low: 25.0,
-  //     high: 24.8,
-  //     foreign: {
-  //       buyVolume: 434000,
-  //       sellVolume: 434000,
-  //       totalValue: 239548456
-  //     }
-  //   },
-  //   {
-  //     symbol: 'BID',
-  //     open: 43.2,
-  //     close: 42.0,
-  //     last: 42.5,
-  //     match: {
-  //       price: 25,
-  //       volume: 231300,
-  //       change: 0.0,
-  //       percentChange: 0.0
-  //     },
-  //     orderBook: {
-  //       bidPrice1: 24.85,
-  //       bidVolume1: 233300,
-  //       bidPrice2: 24.9,
-  //       bidVolume2: 478000,
-  //       bidPrice3: 24.95,
-  //       bidVolume3: 220800,
-  //       askPrice1: 25.0,
-  //       askVolume1: 338100,
-  //       askPrice2: 25.05,
-  //       askVolume2: 219100,
-  //       askPrice3: 25.1,
-  //       askVolume3: 158200
-  //     },
-  //     totalVolume: 408100,
-  //     low: 25.0,
-  //     high: 24.8
-  //   },
-  //   {
-  //     symbol: 'FPT',
-  //     open: 160.0,
-  //     close: 159.0,
-  //     last: 159.5,
-  //     match: {
-  //       price: 25,
-  //       volume: 231300,
-  //       change: 0.0,
-  //       percentChange: 0.0
-  //     },
-  //     orderBook: {
-  //       bidPrice1: 24.85,
-  //       bidVolume1: 233300,
-  //       bidPrice2: 24.9,
-  //       bidVolume2: 478000,
-  //       bidPrice3: 24.95,
-  //       bidVolume3: 220800,
-  //       askPrice1: 25.0,
-  //       askVolume1: 338100,
-  //       askPrice2: 25.05,
-  //       askVolume2: 219100,
-  //       askPrice3: 25.1,
-  //       askVolume3: 158200
-  //     },
-  //     totalVolume: 408100,
-  //     low: 25.0,
-  //     high: 24.8
-  //   }
-  // ];
   const stockValues = [];
   for (const key in stockObject) {
     if (stockObject.hasOwnProperty(key)) {
@@ -607,7 +525,7 @@ rq({
         if(content !=null){
           const stock = transformData(content);
          
-          stockObject[stock.symbol] = stock;
+          stockObject[stock.name] = stock;
           // console.log('stockObject',stockObject);
         }
       
@@ -653,48 +571,52 @@ const saveToRedis = async (input) => {
     console.log("Stock data content null or not existed");
     return;
   }
-  //console.log('saveToRedis dotnet');
+ 
   const content = JSON.parse(stockData.Content);
 
   const newStockObject = baseStockObject;
 
   newStockObject.exchange = content.Exchange;
-  newStockObject.stock_name = content.Symbol;
-  newStockObject.update_time = getFormattedDateTime();
+  newStockObject.name = content.Symbol;
+  newStockObject.updateTime = getFormattedDateTime();
   //console.log('stock_name',newStockObject.stock_name,' ',newStockObject.update_time);
-  newStockObject.prev_day_c = content.PriorVal;
+  newStockObject.reference = content.PriorVal;
   newStockObject.pre_v = 0;
   newStockObject.day_o = content.Open;
-  newStockObject.day_h = content.High;
-  newStockObject.day_l = content.Low;
+  newStockObject.high = content.High;
+  newStockObject.low = content.Low;
   newStockObject.day_c = content.Close;
-  newStockObject.day_v = content.LastVol;
-  newStockObject.price = content.LastPrice;
-  newStockObject.bids = [];
-  newStockObject.bids.push(content.BidPrice1);
-  newStockObject.bids.push(content.BidPrice2);
-  newStockObject.bids.push(content.BidPrice3);
-  newStockObject.bids = JSON.stringify(newStockObject.bids);
-  newStockObject.asks = [
-    Number(content.AskPrice1),
-    Number(content.AskPrice2),
-    Number(content.AskPrice3),
-  ];
-  newStockObject.asks = JSON.stringify(newStockObject.asks);
-  newStockObject.bid_sizes = [
-    content.BidVol1,
-    content.BidVol2,
-    content.BidVol3,
-  ];
-  newStockObject.bid_sizes = JSON.stringify(newStockObject.bid_sizes);
-  newStockObject.ask_sizes = [
-    content.AskVol1,
-    content.AskVol2,
-    content.AskVol3,
-  ];
-  newStockObject.ask_sizes = JSON.stringify(newStockObject.ask_sizes);
-  newStockObject.ceiling = content.Ceiling;
-  newStockObject.floor = content.Floor;
+  // newStockObject.match.volume = content.LastVol;
+  // newStockObject.match.price = content.LastPrice;
+  // newStockObject.orderBook.bids = [];
+  // newStockObject.orderBook.bids.push(content.BidPrice1);
+  // newStockObject.orderBook.bids.push(content.BidPrice2);
+  // newStockObject.orderBook.bids.push(content.BidPrice3);
+  // newStockObject.orderBook.bids = JSON.stringify(newStockObject.bids);
+//   newStockObject.orderBook.asks = [
+//     Number(content.AskPrice1),
+//     Number(content.AskPrice2),
+//     Number(content.AskPrice3),
+//   ];
+//  newStockObject.orderBook.asks = JSON.stringify(newStockObject.orderBook.asks);
+//   newStockObject.orderBook.bidSizes = [
+//     content.BidVol1,
+//     content.BidVol2,
+//     content.BidVol3,
+//   ];
+//   newStockObject.orderBook.bid_sizes = JSON.stringify(
+//     newStockObject.orderBook.bid_sizes
+//   );
+//   newStockObject.orderBook.askSizes = [
+//     content.AskVol1,
+//     content.AskVol2,
+//     content.AskVol3,
+//   ];
+//   newStockObject.orderBook.ask_sizes = JSON.stringify(
+//     newStockObject.orderBook.ask_sizes
+//   );
+//   newStockObject.ceiling = content.Ceiling;
+//   newStockObject.floor = content.Floor;
 
   if (isNaN(content.AvgPrice) || content.AvgPrice == null) {
     newStockObject.avePrice = 0;
@@ -702,13 +624,20 @@ const saveToRedis = async (input) => {
 
   if (content.Symbol == "VCB") {
     //console.log("content data", content);
-    //console.log("newStockObject", newStockObject);
+    console.log("newStockObject", JSON.stringify(newStockObject));
     const key = "stock_" + content.MarketId + "_" + content.Symbol;
   }
 
   redis.writeHash(content.Symbol, newStockObject);
-  // broadcast(newStockObject);
-  // messages.push(newStockObject);
+  //console.log("newStockObject", newStockObject);
+  //  console.log(
+  //    "newStockObject",
+  //    newStockObject,
+  //    JSON.stringify(newStockObject),
+  //    JSON.parse(JSON.stringify(newStockObject))
+  //  );
+  broadcast(JSON.stringify(newStockObject));
+  messages.push(JSON.stringify(newStockObject));
 };
 
 const saveToRedisPhp = async (input) => {
@@ -753,8 +682,8 @@ const saveToRedisPhp = async (input) => {
   const key = "stock_" + content.MarketId + "_" + content.Symbol;
   redis.write(key, newStockObject);
   // console.log("newStockObject", newStockObject);
-  //  broadcast(newStockObject);
-  //  messages.push(newStockObject);
+   broadcast(newStockObject);
+   messages.push(newStockObject);
 };
 
 const server = app.listen(port, "0.0.0.0", () =>
@@ -767,7 +696,7 @@ const server = app.listen(port, "0.0.0.0", () =>
 
 // Example: Simulate a stock update message for broadcasting
 const updatedStock = {
-  name: "ACB",         // Name of the stock to update
+  name: "ACBa",         // Name of the stock to update
   ceiling: 28.0,       // Updated ceiling price
   roof: 26.0,          // Updated roof price
   reference: 27.5,     // Updated reference price
@@ -878,7 +807,7 @@ wss.on("connection", (ws) => {
       };
       
       // Broadcast the updated stock to all connected clients
-      broadcast(JSON.stringify(updatedStock));
+    //  broadcast(JSON.stringify(updatedStock));
 
       console.log("after send");
     } catch (error) {
