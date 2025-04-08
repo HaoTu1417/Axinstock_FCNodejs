@@ -9,9 +9,26 @@ const axios = require("axios");
 const { WebSocketServer } = require("ws");
 const app = express();
 const port = 3021;
-const fs = require('fs');
-const path = require('path');
-const filePath = path.join(__dirname, 'stockObject.json'); // File to save stockObject
+const ssiTimeZone = "Asia/Ho_Chi_Minh"; // Time zone for SSI
+
+const dayjs = require("dayjs");
+const utc = require("dayjs/plugin/utc");
+const timezone = require("dayjs/plugin/timezone");
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const stringToTimeValue = (dateString) => {
+  const parts = dateString.split("/");
+  const offset = dayjs().tz(ssiTimeZone).utcOffset() / 60; // Get offset in hours
+  return new Date(
+    parseInt(parts[2], 10),
+    parseInt(parts[1], 10) - 1,
+    parseInt(parts[0], 10),
+      offset
+  ).getTime();
+};
+
 // Enable CORS for all routes
 app.use(cors());
 
@@ -289,6 +306,153 @@ app.get("/getstock", (req, res) => {
 
   res.send(JSON.parse(JSON.stringify(redis.read("stock_HOSE_VCB"))));
 });
+
+// APIs SUPPORT FOR TRADING VIEW CHART
+app.get("/resolveSymbol", (req, res) => {
+  const symbol = req.query.symbol || "";
+  if (!symbol) {
+    return res.send(null);
+  }
+
+  let lookupRequest = {};
+  lookupRequest.market = "";
+  lookupRequest.symbol = symbol;
+  lookupRequest.pageIndex = 1;
+  lookupRequest.pageSize = 10;
+
+  axios
+    .get(
+      config.market.ApiUrl +
+        client.api.GET_SECURITIES_DETAILs +
+        "?lookupRequest.market=" +
+        lookupRequest.market +
+        "&lookupRequest.pageIndex=" +
+        lookupRequest.pageIndex +
+        "&lookupRequest.pageSize=" +
+        lookupRequest.pageSize +
+        "&lookupRequest.symbol=" +
+        lookupRequest.symbol
+    )
+    .then((response) => {
+      const data = response.data?.data?.[0]?.RepeatedInfo?.[0] || null;
+if (!data) {
+        return res.send(null);
+      } else {
+        const formatData = {
+          symbol: data.Symbol,
+          exchange: data.Exchange,
+        };
+        res.send(JSON.parse(JSON.stringify(formatData)));
+}
+    })
+    .catch((error) => {
+      console.error("Error fetching securities details:", error);
+      res.status(500).send({ error: "Failed to fetch securities details" });
+    });
+});
+
+app.get("/history", async (req, res) => {
+  const { symbol, from, to, count_back } = req.query; // from, to is unix time
+  const LIMIT = 30;
+  let fromValue = Number(from); // unix time
+  let toValue = Number(to); // unix time
+  const nowValue = dayjs.tz(new Date()).unix(); // unix time
+
+
+  if (toValue > nowValue) {
+    toValue = nowValue;
+  }
+
+  if (count_back) {
+    const countBackDays = parseInt(count_back, 10);
+    const differenceDays = Math.ceil((toValue - fromValue) / (24 * 60 * 60));
+    if (differenceDays > countBackDays) {
+      fromValue = toValue - countBackDays * 24 * 60 * 60;
+    }
+  }
+
+  const fetchData = async (fromDate, toDate) => {
+    let allData = [];
+    let currentToDate = toDate;
+
+    while (currentToDate >= fromDate) {
+      let currentFromDate = currentToDate - (LIMIT - 1) * 24 * 60 * 60;
+
+      if (currentFromDate < fromDate) {
+        currentFromDate = fromDate;
+      }
+
+      const lookupRequest = {
+        symbol,
+        fromDate: dayjs
+          .unix(currentFromDate)
+          .tz(ssiTimeZone)
+          .format("DD/MM/YYYY"),
+        toDate: dayjs.unix(currentToDate).tz(ssiTimeZone).format("DD/MM/YYYY"),
+        pageIndex: 1,
+        pageSize: LIMIT,
+        ascending: true,
+      };
+
+      try {
+        const response = await axios.get(
+          config.market.ApiUrl +
+            client.api.GET_DAILY_OHLC +
+            "?lookupRequest.symbol=" +
+            lookupRequest.symbol +
+            "&lookupRequest.fromDate=" +
+            lookupRequest.fromDate +
+            "&lookupRequest.toDate=" +
+            lookupRequest.toDate +
+            "&lookupRequest.pageIndex=" +
+            lookupRequest.pageIndex +
+            "&lookupRequest.pageSize=" +
+            lookupRequest.pageSize +
+            "&lookupRequest.ascending=" +
+            lookupRequest.ascending
+        );
+
+        if (response.data?.data?.length) {
+          const data = response.data.data.map((item) => ({
+            TradingDate: item.TradingDate,
+            time: stringToTimeValue(item.TradingDate),
+            low: Number(item.Low),
+            high: Number(item.High),
+            open: Number(item.Open),
+            close: Number(item.Close),
+            volume: Number(item.Volume),
+          }));
+          allData = data.concat(allData);
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 1050));
+      } catch (error) {
+        console.error("Error fetching symbol history:", error);
+        res.status(500).send({ error: "Failed to fetch symbol history" });
+        return;
+      }
+
+      currentToDate = currentFromDate - 1 * 24 * 60 * 60;
+    }
+
+    return allData;
+  };
+
+  const data = await fetchData(fromValue, toValue);
+
+  if (data?.length) {
+    res.send(JSON.parse(JSON.stringify({ data })));
+  } else {
+    res.send(
+      JSON.parse(
+        JSON.stringify({
+          s: "no_data",
+        })
+      )
+    );
+  }
+});
+// APIs SUPPORT FOR TRADING VIEW CHART
 
 // const stockObject = {
 //   "ACB": {
@@ -598,25 +762,19 @@ rq({
         token: token,
       });
       client.bind(client.events.onData, function (message) {
-       
-       
-  
        const dataObject = JSON.parse(message);
-       if(dataObject!=null){
+        if (dataObject != null) {
         const content = JSON.parse(dataObject.Content);
-        if(content !=null){
+          if (content != null) {
           const stock = transformData(content);
-         
+            broadcast(JSON.stringify(stock));
           stockObject[stock.symbol] = stock;
-          // console.log('stockObject',stockObject);
         }
-      
        }
        
         if (config.enviroment.process == "php") {
           saveToRedisPhp(message);
         } else {
-
           saveToRedis(message);
         }
       });
