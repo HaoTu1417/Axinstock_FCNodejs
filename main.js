@@ -915,7 +915,7 @@ const saveToRedisPhp = async (input) => {
   //  messages.push(newStockObject);
 };
 
-const server = app.listen(port, "localhost", () =>
+const server = app.listen(port, "0.0.0.0", () =>
   console.log(`Example app listening on port ${port}!`)
 );
 
