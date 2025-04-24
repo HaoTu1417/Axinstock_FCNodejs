@@ -20,10 +20,13 @@ redis.on("error", (err) => console.error("Redis connection error:", err));
 
 
 const write = async (key, value) => {
+  if(value.sym == "VCB"){
+   // console.log(`Data written to Redis: ${key} = ${ JSON.stringify(value)}`);
+  }
   try {
     await redis.set(key, JSON.stringify(value));
     return true;
-   // console.log(`Data written to Redis: ${key} = ${value}`);
+   // 
   } catch (error) {
     console.error(`Error writing to Redis for key "${key}":`, error);
     return false;
@@ -33,8 +36,10 @@ const write = async (key, value) => {
 const writeHash = async (key, hashValue) => {
   try {
     await redis.hset(key, hashValue);
-    //console.log(`Hash ${key} set successfully.`);
-
+    //console.log(`Hash ${key} set successfully.`,hashValue);
+    // if(hashValue.sym == "VCB"|| key == "VCB"){
+    //   console.log(`Data written to Redis: ${key} = ${ JSON.stringify(hashValue)}`);
+    // }
     return true;
   } catch (error) {
     console.error('Error setting hash:', error);
